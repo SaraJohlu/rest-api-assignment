@@ -7,7 +7,6 @@ const PORT = 3002;
 app.use(cors()); //Tillåter frontend att göra förfrågningar 
 app.use(express.json()); //Omvandlar till JSON svar från API 
 
-
 //Speldata, titlar, genre på ps. 
 const games = [
     {title: "The Last Of Us 2", genre: "action-adventure"},
@@ -22,7 +21,6 @@ const games = [
     {title: "Gran Turismo 2", genre: "Racing-simulation"},  
 ];
 
-
 app.get("/", (req,res) => {
     res.send("Game recommander for PS")
 });
@@ -31,11 +29,13 @@ app.get("/", (req,res) => {
 app.get("/api/game", (req,res) => {
     const reqGames = games[Math.floor(Math.random() * games.length)];
     res.json(reqGames)
-})
+});
 
-app.post("/api/test", (req,res) => {
-    res.json()
-})
+app.post("/api/game", (req,res) => {
+    console.log(req.body);
+    res.json({message:`${req.body.title} tillagt`})
+});
+
 app.listen(PORT, () => {
     console.log(`http://localhost:${PORT} currently running`);
 });
