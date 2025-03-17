@@ -33,10 +33,13 @@ app.get("/api/game", (req,res) => {
 
 app.post("/api/game", (req,res) => {
     const {title, genre} = (req.body);
+
+    //Om man inte skrivit in en titel eller genre får man ett felmeddelande. 
         if (!title || !genre){
             return res.status(400).json({error: "Behöver en titel och genre"});
         }
     
+    // Deklarerar en variabel för att lägga till nytt spel i rekommendations-listan. 
         const addNewGame = {title, genre};
         games.push(addNewGame);
     
