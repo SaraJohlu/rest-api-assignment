@@ -15,7 +15,7 @@ const games = [
     {title: "God of War", genre: "action-adventure, RPG"},
     {title: "Metal Gear Solid", genre: "Stealth game, shooter game"},
     {title: "Final Fantasy VII", genre: "RPG fantasy"},
-    {title: "Tomb Rider", genre: "action-adventure, RPG"},
+    {title: "Tomb Raider", genre: "action-adventure, RPG"},
     {title: "Uncharted 2: Among thieves", genre: "Action-adventure"},
     {title: "Resident Evil", genre: "Survivor horror game"},
     {title: "Gran Turismo 2", genre: "Racing-simulation"},  
@@ -32,6 +32,14 @@ app.get("/api/game", (req,res) => {
 });
 
 app.post("/api/game", (req,res) => {
+    const {title, genre} = (req.body);
+        if (!title || !genre){
+            return res.status(400).json({error: "Behöver en titel och genre"});
+        }
+    
+        const addNewGame = {title, genre};
+        games.push(addNewGame);
+    
     console.log(req.body);
     res.json({message:`${req.body.title} tillagt`})
 });
