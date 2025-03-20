@@ -8,6 +8,7 @@ Base URL http://localhost:3002
 
 Retunerar startsida. I detta fall Game recommander for PS.
 
+
 ### 2: GET /api/games (Hämta slumpmässigt spel från databasen)
 
 Retunerar ett rekommenderat spel utifrån den lista som är sparad i databasen. 

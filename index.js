@@ -8,8 +8,16 @@ import { fileURLToPath } from 'url'; // Importerar fileURLToPath
 const filename = fileURLToPath(import.meta.url); //Tar fram filnamnet
 const dirname = path.dirname(filename); // Tar fram mappen där filen ligger i.
 
-const mydataPath = path.join(dirname, '..', 'mydatabase.db'); // går in i database.db
-const db = new sqlite3.Database(mydataPath); // Skapar en databas
+const mydataPath = path.join(dirname, 'mydatabase.db'); // Skapar eller öppnar databasen i samma mapp som index.js
+
+const db = new sqlite3.Database(mydataPath, (err) => { // Skapar och öppnar databasen
+    if (err) {
+        console.error("Kunde inte öppna databasen:", err.message);
+    } else {
+        console.log("Databasen är öppen och klar!");
+    }
+});
+
 
 const app = express();
 const PORT = 3002;
@@ -19,16 +27,16 @@ app.use(express.json()); //Omvandlar till JSON svar från API
 
 //Speldata, titlar, genre på ps. 
 const games = [
-    {id: "1", title: "The Last Of Us 2", genre: "action-adventure"},
-    {id: "2", title: "Grand Theft Auto V", genre: "action-adventure, open world first person"},
-    {id: "3", title: "Red Dead Redemption 2", genre: "survival western game, open world"},
-    {id: "4", title: "God of War", genre: "action-adventure, RPG"},
-    {id: "5", title: "Metal Gear Solid", genre: "Stealth game, shooter game"},
-    {id: "6", title: "Final Fantasy VII", genre: "RPG fantasy"},
-    {id: "7", title: "Tomb Raider", genre: "action-adventure, RPG"},
-    {id: "8", title: "Uncharted 2: Among thieves", genre: "Action-adventure"},
-    {id: "9", title: "Resident Evil", genre: "Survivor horror game"},
-    {id: "10", title: "Gran Turismo 2", genre: "Racing-simulation"},  
+    {title: "The Last Of Us 2", genre: "action-adventure"},
+    {title: "Grand Theft Auto V", genre: "action-adventure, open world first person"},
+    {title: "Red Dead Redemption 2", genre: "survival western game, open world"},
+    {title: "God of War", genre: "action-adventure, RPG"},
+    {title: "Metal Gear Solid", genre: "Stealth game, shooter game"},
+    {title: "Final Fantasy VII", genre: "RPG fantasy"},
+    {title: "Tomb Raider", genre: "action-adventure, RPG"},
+    {title: "Uncharted 2: Among thieves", genre: "Action-adventure"},
+    {title: "Resident Evil", genre: "Survivor horror game"},
+    {title: "Gran Turismo 2", genre: "Racing-simulation"},  
 ];
 
 // ---------------REST API MED EXPRRSS---------------------------------------
@@ -65,6 +73,7 @@ app.post("/api/game", (req,res) => {
     
     console.log(req.body);
     res.json({message:`${req.body.title} tillagt`})
+    console.log('Spel tillagt:', { title, genre });
 });
 
 
@@ -83,9 +92,9 @@ app.get('/api/game', (req, res) => {
 
 // Göra en post request
 app.post('/games', (req, res) => {
-    const query = 'INSERT INTO Games (id, title, genre) VALUES (?, ?, ?)'; // SQL query
-    const { id, title, genre} = req.body; // Hämtar spel från databasen
-    db.run(query, [id, name, genre], function(err) { // Lägger till en rad i databasen
+    const query = 'INSERT INTO Games (title, genre) VALUES (?, ?, ?)'; // SQL query
+    const {title, genre} = req.body; // Hämtar spel från databasen
+    db.run(query, [title, genre], function(err) { // Lägger till en rad i databasen
         if (err) {
             res.status(500).json({ error: err.message }); // vid fel
             return;
@@ -96,15 +105,15 @@ app.post('/games', (req, res) => {
 
 // ------------------ Hämta data från API REST SERVER med SQLite3 ----------------------------------------------------
 
-app.get("/api/games", async (req, res) => {
+app.get("/api/fetch-games", async (req, res) => {
     try {
         const response = await fetch("http://localhost:3002/games");
-        const users = await response.json();
+        const games = await response.json();
 
         games.forEach((game) => {
             db.run(
-                "INSERT INTO Games (id, title, genre) VALUES (?, ?, ?)",
-                [game.id, game.title, game.genre],
+                "INSERT INTO Games (title, genre) VALUES (?, ?, ?)",
+                [game.title, game.genre],
                 (err) => {
                     if (err) {
                         console.error("Fel vid insättning:", err.message);
@@ -121,8 +130,8 @@ app.get("/api/games", async (req, res) => {
 });
 
 // ------------------ Hämta datan från SQLite ----------------------------------------------------
-app.get("/games", (req, res) => {
-    db.all("SELECT * FROM Games", [], (err, rows) => {
+app.get("/games-from-db", (req, res) => {
+    db.all("SELECT * FROM Games", games, (err, rows) => {
         if (err) {
             console.error(err.message);
             res.status(500).json({ error: "Kunde inte hämta användare" });
@@ -132,6 +141,20 @@ app.get("/games", (req, res) => {
     });
 });
 
+
+// --------------- Skapa Tabellen i databasen -------------------------------------------------
+db.run(
+    `CREATE TABLE IF NOT EXISTS Games (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    title TEXT NOT NULL,
+    genre TEXT NOT NULL
+);`, (err) => {
+    if (err) {
+        console.error("Kunde inte skapa tabellen:", err.message);
+    } else {
+        console.log("Tabellen 'Games' är skapad eller redan finns.");
+    }
+});
 
 app.listen(PORT, () => {
     console.log(`http://localhost:${PORT} currently running`);
